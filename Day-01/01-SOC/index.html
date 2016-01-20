@@ -40,21 +40,25 @@
                 if (_data[attrName] === value) return;
                 _data[attrName] = value;
                 //trigger change notification for 'attrName'
-                var eventHandler = _eventHandlers[attrName];
-                if (typeof eventHandler === 'function')
-                    eventHandler();
+                var eventHandlers = _eventHandlers[attrName];
+                for(var i=0; i<eventHandlers.length; i++){
+                    var eventHandler = eventHandlers[i];
+                    if (typeof eventHandler === 'function')
+                        eventHandler();
+                }
+
             };
 
             var _eventHandlers = {
-                basic : null,
-                hra : null,
-                da : null,
-                tax : null,
-                salary : null
+                basic : [],
+                hra : [],
+                da : [],
+                tax : [],
+                salary : []
             };
 
             this.onChange = function(attrName, listenerFn){
-                _eventHandlers[attrName] = listenerFn;
+                _eventHandlers[attrName].push(listenerFn);
             }
 
         }
