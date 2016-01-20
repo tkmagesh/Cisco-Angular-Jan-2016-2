@@ -18,25 +18,60 @@
     </style>
     <script src="jquery-1.12.0.js"></script>
     <script>
-    String.prototype.toInt = function(){
-        return parseInt(this,10);
-    };
+        String.prototype.toInt = function(){
+            return parseInt(this,10);
+        };
 
-    $(document).ready(function(){
-        $("#btnCalculate").click(function(){
-            var basic = $("#txtBasic").val().toInt(),
-                hra = $("#txtHra").val().toInt(),
-                da = $("#txtDa").val().toInt(),
-                tax = $("#rangeTax").val().toInt();
-            var gross = basic + hra + da;
-            var net = gross * ((100-tax)/100);
-            $("#divResult").html(net);
-        });
+        //Model
+        function SalaryCalculator(){
+            //state
+            this.basic = 0;
+            this.hra = 0;
+            this.da = 0;
+            this.tax = 0;
+            this.salary = 0;
 
-        $("#rangeTax").change(function(){
-            $("#spanTax").html(this.value);
+            this.onSalaryChange = null;
+        }
+        //behavior
+        SalaryCalculator.prototype.calculate = function(){
+            var gross = this.basic + this.hra + this.da;
+            this.salary = gross * ((100-this.tax)/100);
+            if (typeof this.onSalaryChange === 'function')
+                this.onSalaryChange();
+        }
+
+
+        //View
+        $(document).ready(function(){
+            window.calculator = new SalaryCalculator();
+
+            //Reacting to User Actions
+            $("#txtBasic").change(function(){
+                calculator.basic = this.value.toInt();
+            });
+            $("#txtHra").change(function(){
+                calculator.hra = this.value.toInt();
+            });
+            $("#txtDa").change(function(){
+                calculator.da = this.value.toInt();
+            });
+            $("#rangeTax").change(function(){
+                calculator.tax = this.value.toInt();
+            });
+            $("#btnCalculate").click(function(){
+                calculator.calculate();
+            });
+
+            $("#rangeTax").change(function(){
+                $("#spanTax").html(this.value);
+            });
+
+            //Reacting to Model changes
+            calculator.onSalaryChange = function(){
+                $("#divResult").html(calculator.salary);
+            }
         });
-    });
     </script>
 </head>
 <body>
