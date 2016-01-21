@@ -14,8 +14,23 @@
 
     6. Search for bug - done
     7. Sort the bugs - done
-    8. Improvise the bug display
+    8. Improvise the bug display - done
     9. Persist the bugs in localStorage
+       ----------------------
+        window.localStorage
+            - key/value store
+            - persistent
+            - both key and value should be strings
+                 add an 'id' attribute to the bug and populate with incremental values
+                (key - bug.id, value - use angular.toJson() and angular.fromJson())
+            - apis
+                - setItem(key, value)
+                - getItem(key) //=> value
+                - removeItem(key)
+                - key(index) //=> key at index
+                - clear()
+                - length
+
     10. Display 'createdAt'
     11. Persist the bugs in the server
     12. Categorize the bugs
@@ -58,13 +73,6 @@
         });
 
         bugTrackerApp.controller("bugsController", function($scope, Bug){
-            $scope.getClosedCount = function(){
-                var result = 0;
-                for(var i=0; i<$scope.bugs.length; i++)
-                    if ($scope.bugs[i].isClosed)
-                        ++result;
-                return result;
-            };
 
             $scope.bugs = [
                 new Bug({ name : "Data validation error", isClosed : false}),
@@ -94,6 +102,31 @@
                 return data.length < trimLength ? data : data.substr(0,trimLength) + '...';
             };
         });
+
+        /*bugTrackerApp.filter("closedCount", function(){
+            return function(bugs){
+                var result = 0;
+                for(var i=0; i<bugs.length; i++)
+                    if (bugs[i].isClosed)
+                        ++result;
+                return result;
+            }
+        });*/
+
+        /*bugTrackerApp.filter("closedCount", function($filter){
+            var builtinFilterFilter = $filter('filter');
+            return function(bugs){
+                return builtinFilterFilter(bugs, {isClosed : true}).length;
+            };
+        });*/
+
+        bugTrackerApp.filter("closedCount", function(){
+            return function(bugs){
+                return bugs.reduce(function(result, bug){
+                    return bug.isClosed ? ++result : result;
+                },0);
+            }
+        });
     </script>
 </head>
 <body ng-app="bugTrackerApp" >
@@ -101,7 +134,8 @@
     <div class="content" ng-controller="bugsController">
         <fieldset class="stats">
             <legend>Statistics </legend>
-            <span class="closed">{{getClosedCount()}}</span>
+            <!--<span class="closed">{{(bugs | filter:{isClosed : true}).length}}</span>-->
+            <span class="closed">{{bugs | closedCount}}</span>
             <span>/</span>
             <span>{{bugs.length}}</span>
         </fieldset>
