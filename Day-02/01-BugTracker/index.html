@@ -9,10 +9,11 @@
     1. List the bugs - done
     2. Add a new bug - done
     3. Toggle the closed status of a bug - done
-    4. Remove closed bugs
-    5. Display stats
-    6. Search for bug
-    7. Sort the bugs
+    4. Remove closed bugs - done
+    5. Display stats - done
+
+    6. Search for bug - done
+    7. Sort the bugs - done
     8. Improvise the bug display
     9. Persist the bugs in localStorage
     10. Display 'createdAt'
@@ -43,14 +44,18 @@
     <script>
         var bugTrackerApp = angular.module("bugTrackerApp", []);
 
-        bugTrackerApp.value("Bug", function(defaults){
-            this.name = defaults.name || '';
-            this.isClosed = defaults.isClosed || '';
-            this.toggle = function(){
+        bugTrackerApp.value("defaultBugName", "[Default bug]");
+
+        bugTrackerApp.factory("Bug", function(defaultBugName){
+            function Bug(defaults){
+                this.name = defaults.name || defaultBugName;
+                this.isClosed = defaults.isClosed || false;
+            }
+            Bug.prototype.toggle = function(){
                 this.isClosed = !this.isClosed;
             };
+            return Bug;
         });
-
 
         bugTrackerApp.controller("bugsController", function($scope, Bug){
             $scope.getClosedCount = function(){
@@ -65,10 +70,11 @@
                 new Bug({ name : "Data validation error", isClosed : false}),
                 new Bug({ name : "Server communication failure", isClosed : false}),
                 new Bug({ name : "User actions not registered", isClosed : false}),
+                new Bug({ name : "Laborum anim admodum. Ea o cohaerescant hic mentitum et irure, esse expetendis ad fore fore, nescius quae pariatur deserunt. Minim te a noster eiusmod. Enim ex quibusdam"}),
             ];
             $scope.newBug = '';
             $scope.addBug = function(){
-                $scope.bugs.push($scope.newBug);
+                $scope.bugs.push(new Bug({name : $scope.newBug}));
                 $scope.newBug = '';
             };
             $scope.toggleBug = function(bug){
@@ -79,7 +85,15 @@
                     if ($scope.bugs[i].isClosed)
                         $scope.bugs.splice(i,1);
             };
-        })
+        });
+
+        bugTrackerApp.value("defaultTrimLength", 20);
+        bugTrackerApp.filter("trimText", function(defaultTrimLength){ /*a factory returing the actual filter function*/
+            return function(data, trimLength){
+                trimLength = trimLength || defaultTrimLength;
+                return data.length < trimLength ? data : data.substr(0,trimLength) + '...';
+            };
+        });
     </script>
 </head>
 <body ng-app="bugTrackerApp" >
@@ -94,16 +108,17 @@
         <fieldset class="search">
            <legend>Search </legend>
             <label for="">Name :</label>
-            <input type="text" name="" id="">
+            <input type="text" ng-model="searchBug.name">
             <label for="">Closed ? :</label>
-            <input type="checkbox" name="" id="">
+            <input type="checkbox" ng-model="searchBug.isClosed">
+            <input type="button" value="Show All" ng-click="searchBug.isClosed = undefined">
         </fieldset>
         <fieldset class="sort">
             <legend>Order By </legend>
             <label for="">Order By :</label>
-            <input type="text" name="" id="">
+            <input type="text" ng-model="bugOrder">
             <label for="">Descending ? :</label>
-            <input type="checkbox" name="" id="">
+            <input type="checkbox" ng-model="isDescending">
         </fieldset>
         <secion class="list">
             <label for="">Bug :</label>
@@ -112,10 +127,10 @@
             <input type="button" value="Remove Closed" ng-click="removeClosed()">
             <ol>
                 <li
-                    ng-repeat="bug in bugs track by $index"
+                    ng-repeat="bug in (bugs | filter:searchBug | orderBy:bugOrder:isDescending)"
                     ng-click="toggleBug(bug)"
                     ng-class="{closed : bug.isClosed}"
-                >{{bug}}</li>
+                >{{bug.name | trimText:30}}</li>
             </ol>
         </secion>
     </div>
