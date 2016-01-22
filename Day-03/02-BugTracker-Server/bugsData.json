@@ -1,18 +1,6 @@
 {
   "bugs": [
     {
-      "id": 2,
-      "name": "server communication failure",
-      "isClosed": true,
-      "createdAt": "2016-01-22T05:30:54.442Z"
-    },
-    {
-      "id": 3,
-      "name": "data validation error",
-      "isClosed": false,
-      "createdAt": "2016-01-22T05:30:54.442Z"
-    },
-    {
       "id": 4,
       "name": "restful services is not truly restful even now using post",
       "isClosed": false,
@@ -23,6 +11,12 @@
       "name": "just another new bug",
       "isClosed": false,
       "createdAt": "2016-01-22T06:47:38.264Z"
+    },
+    {
+      "id": 6,
+      "name": "one more bug",
+      "isClosed": false,
+      "createdAt": "2016-01-22T07:14:10.713Z"
     }
   ]
 }

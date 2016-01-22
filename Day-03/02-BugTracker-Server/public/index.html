@@ -94,81 +94,64 @@
             return Bug;
         });
 
-        bugTrackerApp.factory("bugStorage", function(Bug, $window){
-            var maxBugId = 0;
-
-            function getBugsFromStorage(){
-                var bugs = [];
-                for(var i=0; i<$window.localStorage.length; i++){
-                    var key = $window.localStorage.key(i),
-                        data = $window.localStorage.getItem(key),
-                        bugData = angular.fromJson(data),
-                        bug = new Bug(bugData);
-                    if (maxBugId < bug.id) maxBugId = bug.id;
-                    bugs.push(bug);
-                }
-                return bugs;
-            }
-
-            function addBugToStorage(bugName){
-                var newBug = new Bug({id : ++maxBugId, name : bugName});
-                $window.localStorage.setItem(newBug.id, angular.toJson(newBug));
-                return newBug;
-            }
-
-            function saveBugToStorage(bug){
-                $window.localStorage.setItem(bug.id, angular.toJson(bug));
-            }
-            function removeBugFromStorage(bug){
-                $window.localStorage.removeItem(bug.id);
-            }
-            return {
-                getAll : getBugsFromStorage,
-                add : addBugToStorage,
-                save : saveBugToStorage,
-                remove : removeBugFromStorage
-            };
-        });
-
-        bugTrackerApp.service("bugsCollection", function(bugStorage, Bug){
-            this.list = bugStorage.getAll();
-            this.addBug = function(newBugName){
-                var newBug = bugStorage.add(newBugName);
-                this.list.push(newBug);
-            };
-            this.toggleBug = function(bug){
-               bug.toggle();
-               bugStorage.save(bug);
-            };
-            this.removeClosed = function(){
-                for(var i=this.list.length-1; i>=0; i--)
-                    if (this.list[i].isClosed){
-                        bugStorage.remove(this.list[i]);
-                        this.list.splice(i,1);
-                    }
-            };
-        });
-
-        bugTrackerApp.controller("bugsController", function($scope, Bug, $http){
-            var promise = $http.get("http://localhost:3000/bugs");
-            //$scope.bugs = {};
-            promise.then(function(response){
-                $scope.bugs = response.data.map(function(bugData){
-                    return new Bug(bugData);
+        bugTrackerApp.service("bugsService", function($http, Bug){
+            this.getAll = function(){
+                var promise = $http.get("http://localhost:3000/bugs");
+                return promise.then(function(response){
+                    return response.data.map(function(bugData){
+                        return new Bug(bugData);
+                    });
                 });
-            });
+            };
 
-            $scope.addBug = function(newBugName){
+            this.addNew = function(newBugName){
                 var newBug  = new Bug({name : newBugName});
                 var promise = $http.post("http://localhost:3000/bugs", newBug);
-                promise.then(function(response){
-                    $scope.bugs.push(new Bug(response.data));
+                return promise.then(function(response){
+                    return new Bug(response.data);
                 });
+            };
+
+            this.save = function(bug){
+                return $http.put("http://localhost:3000/bugs/" + bug.id, bug);
+            };
+
+            this.remove = function(bug){
+                return $http.delete("http://localhost:3000/bugs/" + bug.id);
             }
+        })
+        bugTrackerApp.controller("bugsController", function($scope, bugsService){
+
+            //$scope.bugs = {};
+
+            bugsService
+                .getAll()
+                .then(function(bugs){
+                    $scope.bugs = bugs;
+                })
+
+
+            $scope.addBug = function(newBugName){
+                bugsService
+                    .addNew(newBugName)
+                    .then(function(bug){
+                        $scope.bugs.push(bug);
+                    });
+            };
+
             $scope.toggleBug = function(bug){
                 bug.toggle();
-                $http.put("http://localhost:3000/bugs/" + bug.id, bug);
-            }
+                bugsService.save(bug);
+            };
+
+            $scope.removeClosed = function(){
+                for(var i=$scope.bugs.length-1; i>=0;i--){
+                    if ($scope.bugs[i].isClosed){
+                        bugsService.remove($scope.bugs[i]);
+                        $scope.bugs.splice(i,1);
+                    }
+                }
+            };
         });
 
 
@@ -211,7 +194,7 @@
             <label for="">Bug :</label>
             <input type="text" ng-model="newBug">
             <input type="button" value="Add Bug" ng-click="addBug(newBug)">
-            <input type="button" value="Remove Closed" ng-click="bugs.removeClosed()">
+            <input type="button" value="Remove Closed" ng-click="removeClosed()">
             <ol>
                 <li ng-repeat="bug in (bugs | filter:searchBug | orderBy:bugOrder:isDescending)">
                     <span class="bugName" ng-click="toggleBug(bug)" ng-class="{closed : bug.isClosed}">
