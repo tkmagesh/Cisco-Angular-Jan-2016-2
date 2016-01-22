@@ -17,6 +17,12 @@
       "name": "restful services is not truly restful even now using post",
       "isClosed": false,
       "createdAt": "2016-01-22T05:30:54.442Z"
+    },
+    {
+      "id": 5,
+      "name": "just another new bug",
+      "isClosed": false,
+      "createdAt": "2016-01-22T06:47:38.264Z"
     }
   ]
 }

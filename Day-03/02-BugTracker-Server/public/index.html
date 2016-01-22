@@ -149,12 +149,26 @@
             };
         });
 
-        bugTrackerApp.controller("bugsController", function($scope, bugsCollection, $http){
+        bugTrackerApp.controller("bugsController", function($scope, Bug, $http){
             var promise = $http.get("http://localhost:3000/bugs");
-            $scope.bugs = {};
+            //$scope.bugs = {};
             promise.then(function(response){
-                $scope.bugs.list = response.data;
+                $scope.bugs = response.data.map(function(bugData){
+                    return new Bug(bugData);
+                });
             });
+
+            $scope.addBug = function(newBugName){
+                var newBug  = new Bug({name : newBugName});
+                var promise = $http.post("http://localhost:3000/bugs", newBug);
+                promise.then(function(response){
+                    $scope.bugs.push(new Bug(response.data));
+                });
+            }
+            $scope.toggleBug = function(bug){
+                bug.toggle();
+                $http.put("http://localhost:3000/bugs/" + bug.id, bug);
+            }
         });
 
 
@@ -196,11 +210,11 @@
         <secion class="list">
             <label for="">Bug :</label>
             <input type="text" ng-model="newBug">
-            <input type="button" value="Add Bug" ng-click="bugs.addBug(newBug)">
+            <input type="button" value="Add Bug" ng-click="addBug(newBug)">
             <input type="button" value="Remove Closed" ng-click="bugs.removeClosed()">
             <ol>
-                <li ng-repeat="bug in (bugs.list | filter:searchBug | orderBy:bugOrder:isDescending)">
-                    <span class="bugName" ng-click="bugs.toggleBug(bug)" ng-class="{closed : bug.isClosed}">
+                <li ng-repeat="bug in (bugs | filter:searchBug | orderBy:bugOrder:isDescending)">
+                    <span class="bugName" ng-click="toggleBug(bug)" ng-class="{closed : bug.isClosed}">
                         {{bug.name | trimText:30}}
                     </span>
                     <span class="datetime">{{bug.createdAt | elapsed}}</span>
